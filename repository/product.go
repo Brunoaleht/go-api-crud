@@ -15,7 +15,7 @@ func NewProductRepository(connection *sql.DB) *ProductRepository {
 }
 
 func (pr *ProductRepository) GetProducts() ([]model.Product, error) {
-	query := "SELECT id, product_name, price FROM product"
+	query := "SELECT id, name, price, description, category_id, stock_quantity FROM product"
 	rows, err := pr.connection.Query(query)
 	if err != nil {
 		log.Println(err)
@@ -40,14 +40,14 @@ func (pr *ProductRepository) GetProducts() ([]model.Product, error) {
 
 func (pr *ProductRepository) CreateProduct(product model.Product) (int, error) {
 	var id int
-	query := "INSERT INTO product (product_name, price) VALUES ($1, $2) RETURNING id"
+	query := "INSERT INTO product (name, description, category_id, price, stock_quantity ) VALUES ($1, $2, $3, $4, $5 ) RETURNING id"
 	result, err := pr.connection.Prepare(query)
 	if err != nil {
 		log.Println(err)
 		return 0, err
 	}
 
-	err = result.QueryRow(product.Name, product.Price).Scan(&id)
+	err = result.QueryRow(product.Name, product.Description, product.CategoryID, product.Price, product.StockQuantity).Scan(&id)
 	if err != nil {
 		log.Println(err)
 		return 0, err
@@ -58,11 +58,11 @@ func (pr *ProductRepository) CreateProduct(product model.Product) (int, error) {
 }
 
 func (pr *ProductRepository) GetProductByID(id int) (model.Product, error) {
-	query := "SELECT id, product_name, price FROM product WHERE id = $1"
+	query := "SELECT id, name, price, description, category_id, stock_quantity, created_at, updated_at FROM product WHERE id = $1"
 	row := pr.connection.QueryRow(query, id)
 
 	var product model.Product
-	err := row.Scan(&product.ID, &product.Name, &product.Price)
+	err := row.Scan(&product.ID, &product.Name, &product.Price, &product.Description, &product.CategoryID, &product.StockQuantity, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		log.Println(err)
 		return model.Product{}, err
@@ -71,24 +71,30 @@ func (pr *ProductRepository) GetProductByID(id int) (model.Product, error) {
 	return product, nil
 }
 
-func (pr *ProductRepository) UpdateProduct(product model.Product) error {
-	query := "UPDATE product SET product_name = $1, price = $2 WHERE id = $3"
-	_, err := pr.connection.Exec(query, product.Name, product.Price, product.ID)
+func (pr *ProductRepository) UpdateProduct(product model.Product) (int, error) {
+	query := "UPDATE product SET name = COALESCE(NULLIF($1, ''), name), description = COALESCE(NULLIF($2, ''), description), price = COALESCE(NULLIF($3, ''), price), category_id =COALESCE(NULLIF($4, ''), category_id), stock_quantity = COALESCE(NULLIF($5, ''), stock_quantity) WHERE id = $6"
+	// query := "UPDATE product SET product_name = $1, price = $2 WHERE id = $3"
+	_, err := pr.connection.Exec(query, product.Name, product.Description, product.Price, product.CategoryID, product.StockQuantity, product.ID)
 	if err != nil {
 		log.Println(err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return product.ID, nil
 }
 
-func (pr *ProductRepository) DeleteProduct(id int) error {
+func (pr *ProductRepository) DeleteProduct(id int) (int, error) {
 	query := "DELETE FROM product WHERE id = $1"
-	_, err := pr.connection.Exec(query, id)
+	result, err := pr.connection.Prepare(query)
 	if err != nil {
 		log.Println(err)
-		return err
+		return 0, err
+	}
+	_, err = result.Exec(id)
+	if err != nil {
+		log.Println(err)
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }

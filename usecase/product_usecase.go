@@ -9,49 +9,129 @@ type ProductUseCase struct {
 	repository repository.ProductRepository
 }
 
+type ProductListResponseApi struct {
+	Message string          `json:"message"`
+	Data    []model.Product `json:"data"`
+	Success bool            `json:"success"`
+}
+
+type ProductResponseApi struct {
+	Message string        `json:"message"`
+	Data    model.Product `json:"data"`
+	Success bool          `json:"success"`
+}
+
 func NewProductUseCase(pr repository.ProductRepository) *ProductUseCase {
 	return &ProductUseCase{
 		repository: pr,
 	}
 }
 
-func (pu *ProductUseCase) GetProducts() ([]model.Product, error) {
-	return pu.repository.GetProducts()
+func (pu *ProductUseCase) GetProducts() ProductListResponseApi {
+	products, err := pu.repository.GetProducts()
+	if err != nil {
+		return ProductListResponseApi{
+			Message: "Error getting products" + err.Error(),
+			Data:    []model.Product{},
+			Success: false,
+		}
+	}
+
+	return ProductListResponseApi{
+		Message: "Success getting products",
+		Data:    products,
+		Success: true,
+	}
+
 }
 
-func (pu *ProductUseCase) CreateProduct(product model.Product) (model.Product, error) {
+func (pu *ProductUseCase) CreateProduct(product model.Product) ProductResponseApi {
 	id, err := pu.repository.CreateProduct(product)
 	if err != nil {
-		return model.Product{}, err
+		return ProductResponseApi{
+			Message: "Error creating product" + err.Error(),
+			Data:    model.Product{},
+			Success: false,
+		}
 	}
 	product.ID = id
 
-	return product, nil
+	return ProductResponseApi{
+		Message: "Success creating product",
+		Data:    product,
+		Success: true,
+	}
+
 }
 
-func (pu *ProductUseCase) GetProductByID(id int) (model.Product, error) {
+func (pu *ProductUseCase) GetProductByID(id int) ProductResponseApi {
 	product, err := pu.repository.GetProductByID(id)
 	if err != nil {
-		return model.Product{}, err
+		return ProductResponseApi{
+			Message: "Error getting product" + err.Error(),
+			Data:    model.Product{},
+			Success: false,
+		}
 	}
 
-	return product, nil
+	return ProductResponseApi{
+		Message: "Success getting product",
+		Data:    product,
+		Success: true,
+	}
+
 }
 
-func (pu *ProductUseCase) UpdateProduct(product model.Product) (model.Product, error) {
-	err := pu.repository.UpdateProduct(product)
+func (pu *ProductUseCase) UpdateProduct(product model.Product) ProductResponseApi {
+	_, err := pu.repository.GetProductByID(product.ID)
 	if err != nil {
-		return model.Product{}, err
+		return ProductResponseApi{
+			Message: "Error not found product" + err.Error(),
+			Data:    model.Product{},
+			Success: false,
+		}
 	}
 
-	return product, nil
+	id, err := pu.repository.UpdateProduct(product)
+	if err != nil {
+		return ProductResponseApi{
+			Message: "Error updating product" + err.Error(),
+			Data:    model.Product{},
+			Success: false,
+		}
+	}
+	product.ID = id
+
+	return ProductResponseApi{
+		Message: "Success updating product",
+		Data:    product,
+		Success: true,
+	}
 }
 
-func (pu *ProductUseCase) DeleteProduct(id int) error {
-	err := pu.repository.DeleteProduct(id)
+func (pu *ProductUseCase) DeleteProduct(id int) ProductResponseApi {
+	productExist, err := pu.repository.GetProductByID(id)
 	if err != nil {
-		return err
+		return ProductResponseApi{
+			Message: "Error not found product" + err.Error(),
+			Data:    model.Product{},
+			Success: false,
+		}
 	}
 
-	return nil
+	deletedId, err := pu.repository.DeleteProduct(id)
+	if err != nil {
+		return ProductResponseApi{
+			Message: "Error deleting product" + err.Error(),
+			Data:    model.Product{},
+			Success: false,
+		}
+	}
+	productExist.ID = deletedId
+
+	return ProductResponseApi{
+		Message: "Success deleting product",
+		Data:    productExist,
+		Success: true,
+	}
 }
