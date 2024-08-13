@@ -57,7 +57,7 @@ func (ur *UserRepository) CreateUser(user model.User) (int, error) {
 	return id, nil
 }
 
-func (ur *UserRepository) GetUserById(id int) (model.User, error) {
+func (ur *UserRepository) GetUserByID(id int) (model.User, error) {
 	query := "SELECT id, name, email, phone, group_id FROM user WHERE id = $1"
 	row := ur.connection.QueryRow(query, id)
 
@@ -72,7 +72,7 @@ func (ur *UserRepository) GetUserById(id int) (model.User, error) {
 }
 
 func (ur *UserRepository) UpdateUser(user model.User) (int, error) {
-	query := "UPDATE user SET name = $1, email = $2, phone = $3, group_id = $4 WHERE id = $5"
+	query := "UPDATE user SET name = COALESCE(NULLIF($1, ''), name), email = COALESCE(NULLIF($2, ''), email), phone = COALESCE(NULLIF($3, ''), phone), group_id =COALESCE(NULLIF($4, ''), group_id) WHERE id = $5"
 	result, err := ur.connection.Prepare(query)
 	if err != nil {
 		log.Println(err)
