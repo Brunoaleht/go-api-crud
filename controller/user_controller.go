@@ -9,41 +9,40 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ProductController is a struct that represents a product controller
-type ProductController struct {
-	ProductUseCase usecase.ProductUseCase
+// UserController is a struct that represents a user controller
+type UserController struct {
+	UserUseCase usecase.UserUseCase
 }
 
-// NewProductController is a function to create a new product controller
-func NewProductController(usecase usecase.ProductUseCase) *ProductController {
-	return &ProductController{
-		ProductUseCase: usecase,
+func NewUserController(usecase usecase.UserUseCase) *UserController {
+	return &UserController{
+		UserUseCase: usecase,
 	}
 }
 
-// GetProducts is a function to get all products
-func (pc *ProductController) GetProducts(ctx *gin.Context) {
-	response := pc.ProductUseCase.GetProducts()
+// GetUsers is a function to get all users
+func (uc *UserController) GetUsers(ctx *gin.Context) {
+	response := uc.UserUseCase.GetUsers()
 	if !response.Success {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message":  response.Message,
-			"success":  response.Success,
-			"products": response.Data,
+			"message": response.Message,
+			"success": response.Success,
+			"users":   response.Data,
 		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"products": response.Data,
-		"message":  response.Message,
-		"success":  response.Success,
+		"users":   response.Data,
+		"message": response.Message,
+		"success": response.Success,
 	})
 }
 
-// CreateProduct is a function to create a new product
-func (pc *ProductController) CreateProduct(ctx *gin.Context) {
-	var product model.Product
-	err := ctx.BindJSON(&product)
+// CreateUser is a function to create a new user
+func (uc *UserController) CreateUser(ctx *gin.Context) {
+	var user model.User
+	err := ctx.BindJSON(&user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid request payload",
@@ -52,7 +51,7 @@ func (pc *ProductController) CreateProduct(ctx *gin.Context) {
 		return
 	}
 
-	response := pc.ProductUseCase.CreateProduct(product)
+	response := uc.UserUseCase.CreateUser(user)
 	if !response.Success {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": response.Message,
@@ -62,14 +61,14 @@ func (pc *ProductController) CreateProduct(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"product": response.Data,
+		"user":    response.Data,
 		"message": response.Message,
 		"success": response.Success,
 	})
 }
 
-// GetProductByID is a function to get a product by ID
-func (pc *ProductController) GetProductByID(ctx *gin.Context) {
+// GetUserByID is a function to get a user by ID
+func (uc *UserController) GetUserByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	idNumber, err := strconv.Atoi(id)
 	if err != nil {
@@ -79,9 +78,10 @@ func (pc *ProductController) GetProductByID(ctx *gin.Context) {
 		})
 		return
 	}
-	response := pc.ProductUseCase.GetProductByID(idNumber)
+
+	response := uc.UserUseCase.GetUserByID(idNumber)
 	if !response.Success {
-		ctx.JSON(http.StatusNotFound, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": response.Message,
 			"success": response.Success,
 		})
@@ -89,14 +89,14 @@ func (pc *ProductController) GetProductByID(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"product": response.Data,
+		"user":    response.Data,
 		"message": response.Message,
 		"success": response.Success,
 	})
 }
 
-// UpdateProduct is a function to update a product
-func (pc *ProductController) UpdateProduct(ctx *gin.Context) {
+// UpdateUser is a function to update a user
+func (uc *UserController) UpdateUser(ctx *gin.Context) {
 	id := ctx.Param("id")
 	idNumber, err := strconv.Atoi(id)
 	if err != nil {
@@ -106,11 +106,11 @@ func (pc *ProductController) UpdateProduct(ctx *gin.Context) {
 		})
 		return
 	}
-	var product model.Product
 
-	product.ID = idNumber
+	var user model.User
+	user.ID = idNumber
 
-	err = ctx.BindJSON(&product)
+	err = ctx.BindJSON(&user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid request payload",
@@ -119,7 +119,7 @@ func (pc *ProductController) UpdateProduct(ctx *gin.Context) {
 		return
 	}
 
-	response := pc.ProductUseCase.UpdateProduct(product)
+	response := uc.UserUseCase.UpdateUser(user)
 	if !response.Success {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": response.Message,
@@ -129,15 +129,14 @@ func (pc *ProductController) UpdateProduct(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"product": response.Data,
+		"user":    response.Data,
 		"message": response.Message,
 		"success": response.Success,
 	})
-
 }
 
-// DeleteProduct is a function to delete a product
-func (pc *ProductController) DeleteProduct(ctx *gin.Context) {
+// DeleteUser is a function to delete a user
+func (uc *UserController) DeleteUser(ctx *gin.Context) {
 	id := ctx.Param("id")
 	idNumber, err := strconv.Atoi(id)
 	if err != nil {
@@ -148,7 +147,7 @@ func (pc *ProductController) DeleteProduct(ctx *gin.Context) {
 		return
 	}
 
-	response := pc.ProductUseCase.DeleteProduct(idNumber)
+	response := uc.UserUseCase.DeleteUser(idNumber)
 	if !response.Success {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": response.Message,
@@ -158,7 +157,7 @@ func (pc *ProductController) DeleteProduct(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"product": response.Data,
+		"user":    response.Data,
 		"message": response.Message,
 		"success": response.Success,
 	})

@@ -48,7 +48,7 @@ func (uc *UserUseCase) CreateUser(user model.User) UserResponseApi {
 	foundUser, err := uc.repo.GetUserByEmail(user.Email)
 	if err != nil {
 		return UserResponseApi{
-			Message: "Error checking user existence",
+			Message: "Error checking user existence" + err.Error(),
 			Data:    model.User{},
 			Success: false,
 		}
@@ -64,7 +64,7 @@ func (uc *UserUseCase) CreateUser(user model.User) UserResponseApi {
 	id, err := uc.repo.CreateUser(user)
 	if err != nil {
 		return UserResponseApi{
-			Message: "Error creating user",
+			Message: "Error creating user" + err.Error(),
 			Data:    model.User{},
 			Success: false,
 		}
@@ -82,7 +82,7 @@ func (uc *UserUseCase) GetUserByID(id int) UserResponseApi {
 	user, err := uc.repo.GetUserByID(id)
 	if err != nil {
 		return UserResponseApi{
-			Message: "Error getting, user is not found",
+			Message: "Error getting, user is not found" + err.Error(),
 			Data:    model.User{},
 			Success: false,
 		}
@@ -99,7 +99,7 @@ func (uc *UserUseCase) UpdateUser(user model.User) UserResponseApi {
 	existingUser, err := uc.repo.GetUserByID(user.ID)
 	if err != nil {
 		return UserResponseApi{
-			Message: "Error getting, user is not found",
+			Message: "Error getting, user is not found" + err.Error(),
 			Data:    model.User{},
 			Success: false,
 		}
@@ -118,7 +118,7 @@ func (uc *UserUseCase) UpdateUser(user model.User) UserResponseApi {
 	_, err = uc.repo.UpdateUser(user)
 	if err != nil {
 		return UserResponseApi{
-			Message: "Error updating user",
+			Message: "Error updating user" + err.Error(),
 			Data:    model.User{},
 			Success: false,
 		}
@@ -135,7 +135,7 @@ func (uc *UserUseCase) DeleteUser(id int) UserResponseApi {
 	_, err := uc.repo.GetUserByID(id)
 	if err != nil {
 		return UserResponseApi{
-			Message: "Error getting, user is not found",
+			Message: "Error getting, user is not found" + err.Error(),
 			Data:    model.User{},
 			Success: false,
 		}
