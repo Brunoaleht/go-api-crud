@@ -81,7 +81,7 @@ func (uc *UserController) GetUserByID(ctx *gin.Context) {
 
 	response := uc.UserUseCase.GetUserByID(idNumber)
 	if !response.Success {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusNotFound, gin.H{
 			"message": response.Message,
 			"success": response.Success,
 		})

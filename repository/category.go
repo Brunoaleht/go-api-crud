@@ -107,13 +107,18 @@ func (cr *CategoryRepository) DeleteCategory(id int) (int, error) {
 }
 
 func (cr *CategoryRepository) GetCategoryByName(name string) (model.Category, error) {
-	query := "SELECT id, name, description FROM category WHERE name = $1"
-	row := cr.connection.QueryRow(query, name)
-
 	var category model.Category
-	err := row.Scan(&category.ID, &category.Name, &category.Description)
+	err := cr.connection.QueryRow("SELECT id, name, description, created_at, updated_at FROM category WHERE name = $1", name).Scan(
+		&category.ID, &category.Name, &category.Description, &category.CreatedAt, &category.UpdatedAt,
+	)
+
 	if err != nil {
-		log.Println(err)
+		// Verifica se o erro é devido à ausência de resultados
+		if err == sql.ErrNoRows {
+			// Retorna uma categoria vazia e um erro nulo
+			return model.Category{}, nil
+		}
+		// Retorna outros erros inesperados
 		return model.Category{}, err
 	}
 

@@ -27,7 +27,7 @@ func (pr *ProductRepository) GetProducts() ([]model.Product, error) {
 	var productObj model.Product
 
 	for rows.Next() {
-		err := rows.Scan(&productObj.ID, &productObj.Name, &productObj.Price)
+		err := rows.Scan(&productObj.ID, &productObj.Name, &productObj.Price, &productObj.Description, &productObj.CategoryID, &productObj.StockQuantity)
 		if err != nil {
 			log.Println(err)
 			return []model.Product{}, err

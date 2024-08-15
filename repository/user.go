@@ -15,7 +15,7 @@ func NewUserRepository(connection *sql.DB) *UserRepository {
 }
 
 func (ur *UserRepository) GetUsers() ([]model.User, error) {
-	query := "SELECT id, name, email, phone, group_id FROM user"
+	query := "SELECT id, name, email, phone, group_id FROM users"
 	rows, err := ur.connection.Query(query)
 	if err != nil {
 		log.Printf("Error querying user: %v", err)
@@ -40,7 +40,7 @@ func (ur *UserRepository) GetUsers() ([]model.User, error) {
 
 func (ur *UserRepository) CreateUser(user model.User) (int, error) {
 	var id int
-	query := "INSERT INTO user (name, email, password_hash, phone, group_id) VALUES ($1, $2, $3, $4, $5) RETURNING id"
+	query := "INSERT INTO users (name, email, password_hash, phone, group_id) VALUES ($1, $2, $3, $4, $5) RETURNING id"
 	result, err := ur.connection.Prepare(query)
 	if err != nil {
 		log.Println(err)
@@ -58,7 +58,7 @@ func (ur *UserRepository) CreateUser(user model.User) (int, error) {
 }
 
 func (ur *UserRepository) GetUserByID(id int) (model.User, error) {
-	query := "SELECT id, name, email, phone, group_id FROM user WHERE id = $1"
+	query := "SELECT id, name, email, phone, group_id FROM users WHERE id = $1"
 	row := ur.connection.QueryRow(query, id)
 
 	var user model.User
@@ -72,7 +72,7 @@ func (ur *UserRepository) GetUserByID(id int) (model.User, error) {
 }
 
 func (ur *UserRepository) UpdateUser(user model.User) (int, error) {
-	query := "UPDATE user SET name = COALESCE(NULLIF($1, ''), name), email = COALESCE(NULLIF($2, ''), email), phone = COALESCE(NULLIF($3, ''), phone), group_id =COALESCE(NULLIF($4, ''), group_id) WHERE id = $5"
+	query := "UPDATE users SET name = COALESCE(NULLIF($1, ''), name), email = COALESCE(NULLIF($2, ''), email), phone = COALESCE(NULLIF($3, ''), phone), group_id =COALESCE(NULLIF($4, ''), group_id) WHERE id = $5"
 	result, err := ur.connection.Prepare(query)
 	if err != nil {
 		log.Println(err)
@@ -90,7 +90,7 @@ func (ur *UserRepository) UpdateUser(user model.User) (int, error) {
 }
 
 func (ur *UserRepository) DeleteUser(id int) (int, error) {
-	query := "DELETE FROM user WHERE id = $1"
+	query := "DELETE FROM users WHERE id = $1"
 	result, err := ur.connection.Prepare(query)
 	if err != nil {
 		log.Println(err)
@@ -106,12 +106,18 @@ func (ur *UserRepository) DeleteUser(id int) (int, error) {
 }
 
 func (ur *UserRepository) GetUserByEmail(email string) (model.User, error) {
-	query := "SELECT id, name, email, phone, group_id FROM user WHERE email = $1"
+	query := "SELECT id, name, email, phone, group_id FROM users WHERE email = $1"
 	row := ur.connection.QueryRow(query, email)
 
 	var user model.User
 	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Phone, &user.GroupID)
 	if err != nil {
+		// Verifica se o erro é devido à ausência de resultados
+		if err == sql.ErrNoRows {
+			// Retorna uma categoria vazia e um erro nulo
+			return model.User{}, nil
+		}
+		// Retorna outros erros inesperados
 		return model.User{}, err
 	}
 
@@ -119,7 +125,7 @@ func (ur *UserRepository) GetUserByEmail(email string) (model.User, error) {
 }
 
 func (ur *UserRepository) UpdatedPassword(user model.User) (int, error) {
-	query := "UPDATE user SET password_hash = $1 WHERE id = $2"
+	query := "UPDATE users SET password_hash = $1 WHERE id = $2"
 	result, err := ur.connection.Prepare(query)
 	if err != nil {
 		log.Println(err)

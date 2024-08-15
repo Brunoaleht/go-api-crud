@@ -46,15 +46,51 @@ func (cu *CategoryUseCase) GetCategories() CategoryListResponseApi {
 	}
 }
 
+// func (cu *CategoryUseCase) CreateCategory(category model.Category) CategoryResponseApi {
+// 	categoryExists, err := cu.repository.GetCategoryByName(category.Name)
+// 	if err != nil {
+// 		return CategoryResponseApi{
+// 			Message: "Error checking category existence" + err.Error(),
+// 			Data:    model.Category{},
+// 			Success: false,
+// 		}
+// 	}
+// 	if categoryExists.ID != 0 {
+// 		return CategoryResponseApi{
+// 			Message: "Category already exists",
+// 			Data:    model.Category{},
+// 			Success: false,
+// 		}
+// 	}
+
+// 	id, err := cu.repository.CreateCategory(category)
+// 	if err != nil {
+// 		return CategoryResponseApi{
+// 			Message: "Error creating category" + err.Error(),
+// 			Data:    model.Category{},
+// 			Success: false,
+// 		}
+// 	}
+
+// 	category.ID = id
+// 	return CategoryResponseApi{
+// 		Message: "Success creating category",
+// 		Data:    category,
+// 		Success: true,
+// 	}
+// }
+
 func (cu *CategoryUseCase) CreateCategory(category model.Category) CategoryResponseApi {
+	// Verifica se a categoria já existe
 	categoryExists, err := cu.repository.GetCategoryByName(category.Name)
 	if err != nil {
 		return CategoryResponseApi{
-			Message: "Error checking category existence" + err.Error(),
+			Message: "Error checking category existence: " + err.Error(),
 			Data:    model.Category{},
 			Success: false,
 		}
 	}
+
 	if categoryExists.ID != 0 {
 		return CategoryResponseApi{
 			Message: "Category already exists",
@@ -63,10 +99,11 @@ func (cu *CategoryUseCase) CreateCategory(category model.Category) CategoryRespo
 		}
 	}
 
+	// Cria a nova categoria
 	id, err := cu.repository.CreateCategory(category)
 	if err != nil {
 		return CategoryResponseApi{
-			Message: "Error creating category" + err.Error(),
+			Message: "Error creating category: " + err.Error(),
 			Data:    model.Category{},
 			Success: false,
 		}
