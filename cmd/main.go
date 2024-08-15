@@ -38,9 +38,10 @@ func main() {
 	CategoryRoutes := routes.NewCategoryRoutes(CategoryController)
 	ProductRoutes := routes.NewProductRoutes(ProductController)
 	UserRoutes := routes.NewUserRoutes(UserController)
+	AuthRoutes := routes.NewAuthRoutes(UserController)
 
 	//Init Routes
-	routes.InitRoutes(server, ProductRoutes, UserRoutes, CategoryRoutes)
+	routes.InitRoutes(server, ProductRoutes, UserRoutes, CategoryRoutes, AuthRoutes)
 
 	server.Run(":8000")
 }
