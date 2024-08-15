@@ -46,7 +46,7 @@ func (uc *UserUseCase) GetUsers() UserListResponseApi {
 }
 
 func (uc *UserUseCase) CreateUser(user model.User) UserResponseApi {
-	foundUser, err := uc.repo.GetUserByEmail(user.Email)
+	foundUser, err := uc.repo.GetUserByEmailNotWithSalt(user.Email)
 	if err != nil {
 		return UserResponseApi{
 			Message: "Error checking user existence" + err.Error(),
@@ -173,6 +173,7 @@ func (uc *UserUseCase) DeleteUser(id int) UserResponseApi {
 }
 
 func (uc *UserUseCase) LoginUser(email string, password string) UserResponseApi {
+
 	user, err := uc.repo.GetUserByEmail(email)
 	if err != nil {
 		return UserResponseApi{
@@ -189,6 +190,7 @@ func (uc *UserUseCase) LoginUser(email string, password string) UserResponseApi 
 			Success: false,
 		}
 	}
+	user.PasswordHash = ""
 
 	return UserResponseApi{
 		Message: "Success login",
@@ -198,7 +200,7 @@ func (uc *UserUseCase) LoginUser(email string, password string) UserResponseApi 
 }
 
 func (uc *UserUseCase) RequestUpdatedPassword(email string) UserResponseApi {
-	user, err := uc.repo.GetUserByEmail(email)
+	user, err := uc.repo.GetUserByEmailNotWithSalt(email)
 	if err != nil {
 		return UserResponseApi{
 			Message: "Error getting, user is not found" + err.Error(),

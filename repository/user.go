@@ -114,6 +114,25 @@ func (ur *UserRepository) DeleteUser(id int) (int, error) {
 }
 
 func (ur *UserRepository) GetUserByEmail(email string) (model.User, error) {
+	query := "SELECT id, name, email, phone, group_id, password_hash FROM users WHERE email = $1"
+	row := ur.connection.QueryRow(query, email)
+
+	var user model.User
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Phone, &user.GroupID, &user.PasswordHash)
+	if err != nil {
+		// Verifica se o erro é devido à ausência de resultados
+		if err == sql.ErrNoRows {
+			// Retorna uma categoria vazia e um erro nulo
+			return model.User{}, nil
+		}
+		// Retorna outros erros inesperados
+		return model.User{}, err
+	}
+
+	return user, nil
+}
+
+func (ur *UserRepository) GetUserByEmailNotWithSalt(email string) (model.User, error) {
 	query := "SELECT id, name, email, phone, group_id FROM users WHERE email = $1"
 	row := ur.connection.QueryRow(query, email)
 

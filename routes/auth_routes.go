@@ -25,6 +25,6 @@ func (r *AuthRoutes) InitRoutes(router *gin.Engine) {
 		authRoutes.POST("/", r.Controller.Login)
 		authRoutes.POST("/register", r.Controller.CreateUser)
 		authRoutes.POST("/request-password", r.Controller.RequestUpdatePassword)
-		authRoutes.PUT("/:id/update-password", r.Controller.UpdatePassword)
+		authRoutes.PUT("/update-password/:id", r.Controller.UpdatePassword)
 	}
 }
