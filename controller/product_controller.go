@@ -163,3 +163,32 @@ func (pc *ProductController) DeleteProduct(ctx *gin.Context) {
 		"success": response.Success,
 	})
 }
+
+// GetProductsByCategoryID is a function to get all products by category ID
+func (pc *ProductController) GetProductsByCategoryID(ctx *gin.Context) {
+	id := ctx.Param("id")
+	idNumber, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid ID",
+			"success": false,
+		})
+		return
+	}
+
+	response := pc.ProductUseCase.GetProductsByCategoryID(idNumber)
+	if !response.Success {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message":  response.Message,
+			"success":  response.Success,
+			"products": response.Data,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"products": response.Data,
+		"message":  response.Message,
+		"success":  response.Success,
+	})
+}

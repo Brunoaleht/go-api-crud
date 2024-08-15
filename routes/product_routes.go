@@ -22,6 +22,7 @@ func (r *ProductRoutes) InitRoutes(router *gin.Engine) {
 		// Adicione outras rotas de produtos aqui, como POST, PUT, DELETE, etc.
 		productRoutes.DELETE("/:id", r.Controller.DeleteProduct)
 		productRoutes.PATCH("/:id", r.Controller.UpdateProduct)
+		productRoutes.GET("/category/:id", r.Controller.GetProductsByCategoryID)
 		productRoutes.GET("/:id", r.Controller.GetProductByID)
 		productRoutes.POST("/", r.Controller.CreateProduct)
 		productRoutes.GET("/", r.Controller.GetProducts)

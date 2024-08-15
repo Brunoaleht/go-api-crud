@@ -22,21 +22,25 @@ func main() {
 	//Repository
 	ProductRepository := repository.NewProductRepository(dbConnection)
 	UserRepository := repository.NewUserRepository(dbConnection)
+	CategoryRepository := repository.NewCategoryRepository(dbConnection)
 
 	//UseCase
-	ProductUseCase := usecase.NewProductUseCase(*ProductRepository)
+	CategoryUseCase := usecase.NewCategoryUseCase(*CategoryRepository)
+	ProductUseCase := usecase.NewProductUseCase(*ProductRepository, *CategoryRepository)
 	UserUseCase := usecase.NewUserUseCase(*UserRepository)
 
 	//Controller
+	CategoryController := controller.NewCategoryController(*CategoryUseCase)
 	ProductController := controller.NewProductController(*ProductUseCase)
 	UserController := controller.NewUserController(*UserUseCase)
 
 	//Routes
+	CategoryRoutes := routes.NewCategoryRoutes(CategoryController)
 	ProductRoutes := routes.NewProductRoutes(ProductController)
 	UserRoutes := routes.NewUserRoutes(UserController)
 
 	//Init Routes
-	routes.InitRoutes(server, ProductRoutes, UserRoutes)
+	routes.InitRoutes(server, ProductRoutes, UserRoutes, CategoryRoutes)
 
 	server.Run(":8000")
 }

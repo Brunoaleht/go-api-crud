@@ -6,7 +6,8 @@ import (
 )
 
 type ProductUseCase struct {
-	repository repository.ProductRepository
+	repository   repository.ProductRepository
+	categoryRepo repository.CategoryRepository
 }
 
 type ProductListResponseApi struct {
@@ -21,11 +22,18 @@ type ProductResponseApi struct {
 	Success bool          `json:"success"`
 }
 
-func NewProductUseCase(pr repository.ProductRepository) *ProductUseCase {
+func NewProductUseCase(repo repository.ProductRepository, categoryRepo repository.CategoryRepository) *ProductUseCase {
 	return &ProductUseCase{
-		repository: pr,
+		repository:   repo,
+		categoryRepo: categoryRepo,
 	}
 }
+
+// func NewProductUseCase(pr repository.ProductRepository) *ProductUseCase {
+// 	return &ProductUseCase{
+// 		repository: pr,
+// 	}
+// }
 
 func (pu *ProductUseCase) GetProducts() ProductListResponseApi {
 	products, err := pu.repository.GetProducts()
@@ -132,6 +140,32 @@ func (pu *ProductUseCase) DeleteProduct(id int) ProductResponseApi {
 	return ProductResponseApi{
 		Message: "Success deleting product",
 		Data:    productExist,
+		Success: true,
+	}
+}
+
+func (pu *ProductUseCase) GetProductsByCategoryID(id int) ProductListResponseApi {
+	_, err := pu.categoryRepo.GetCategoryByID(id)
+	if err != nil {
+		return ProductListResponseApi{
+			Message: "Error not found category" + err.Error(),
+			Data:    []model.Product{},
+			Success: false,
+		}
+	}
+
+	products, err := pu.repository.GetProductsByCategoryID(id)
+	if err != nil {
+		return ProductListResponseApi{
+			Message: "Error getting products" + err.Error(),
+			Data:    []model.Product{},
+			Success: false,
+		}
+	}
+
+	return ProductListResponseApi{
+		Message: "Success getting products",
+		Data:    products,
 		Success: true,
 	}
 }

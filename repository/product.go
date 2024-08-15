@@ -98,3 +98,27 @@ func (pr *ProductRepository) DeleteProduct(id int) (int, error) {
 
 	return id, nil
 }
+
+func (pr *ProductRepository) GetProductsByCategoryID(id int) ([]model.Product, error) {
+	query := "SELECT id, name, price, description, category_id, stock_quantity FROM product WHERE category_id = $1"
+	rows, err := pr.connection.Query(query, id)
+	if err != nil {
+		log.Println(err)
+		return []model.Product{}, err
+	}
+	defer rows.Close()
+
+	var productList []model.Product
+	var productObj model.Product
+
+	for rows.Next() {
+		err := rows.Scan(&productObj.ID, &productObj.Name, &productObj.Price, &productObj.Description, &productObj.CategoryID, &productObj.StockQuantity)
+		if err != nil {
+			log.Println(err)
+			return []model.Product{}, err
+		}
+		productList = append(productList, productObj)
+	}
+
+	return productList, nil
+}

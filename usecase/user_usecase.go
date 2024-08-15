@@ -132,7 +132,7 @@ func (uc *UserUseCase) UpdateUser(user model.User) UserResponseApi {
 }
 
 func (uc *UserUseCase) DeleteUser(id int) UserResponseApi {
-	_, err := uc.repo.GetUserByID(id)
+	user, err := uc.repo.GetUserByID(id)
 	if err != nil {
 		return UserResponseApi{
 			Message: "Error getting, user is not found" + err.Error(),
@@ -152,7 +152,7 @@ func (uc *UserUseCase) DeleteUser(id int) UserResponseApi {
 
 	return UserResponseApi{
 		Message: "Success deleting user",
-		Data:    model.User{},
+		Data:    user,
 		Success: true,
 	}
 }
