@@ -162,3 +162,96 @@ func (uc *UserController) DeleteUser(ctx *gin.Context) {
 		"success": response.Success,
 	})
 }
+
+func (uc *UserController) Login(ctx *gin.Context) {
+	var login model.LoginRequest
+	err := ctx.BindJSON(&login)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request payload",
+			"success": false,
+		})
+		return
+	}
+
+	response := uc.UserUseCase.LoginUser(login.Email, login.Password)
+	if !response.Success {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": response.Message,
+			"success": response.Success,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"user":    response.Data,
+		"message": response.Message,
+		"success": response.Success,
+	})
+}
+
+func (uc *UserController) RequestUpdatePassword(ctx *gin.Context) {
+	var request model.RequestUpdatePassword
+	err := ctx.BindJSON(&request)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request payload",
+			"success": false,
+		})
+		return
+	}
+
+	response := uc.UserUseCase.RequestUpdatedPassword(request.Email)
+	if !response.Success {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": response.Message,
+			"success": response.Success,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"user":    response.Data,
+		"message": response.Message,
+		"success": response.Success,
+	})
+}
+
+func (uc *UserController) UpdatePassword(ctx *gin.Context) {
+	id := ctx.Param("id")
+	idNumber, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid ID",
+			"success": false,
+		})
+		return
+	}
+
+	var update model.UpdatePassword
+	update.ID = idNumber
+
+	err = ctx.BindJSON(&update)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request payload",
+			"success": false,
+		})
+		return
+	}
+
+	response := uc.UserUseCase.UpdatePassword(update.ID, update.Password)
+	if !response.Success {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": response.Message,
+			"success": response.Success,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"user":    response.Data,
+		"message": response.Message,
+		"success": response.Success,
+	})
+}

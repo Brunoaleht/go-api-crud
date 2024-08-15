@@ -117,3 +117,21 @@ func (ur *UserRepository) GetUserByEmail(email string) (model.User, error) {
 
 	return user, nil
 }
+
+func (ur *UserRepository) UpdatedPassword(user model.User) (int, error) {
+	query := "UPDATE user SET password_hash = $1 WHERE id = $2"
+	result, err := ur.connection.Prepare(query)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+
+	_, err = result.Exec(user.PasswordHash, user.ID)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	defer result.Close()
+
+	return user.ID, nil
+}

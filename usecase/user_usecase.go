@@ -3,6 +3,7 @@ package usecase
 import (
 	"go-api-commerce/model"
 	"go-api-commerce/repository"
+	"go-api-commerce/utils"
 )
 
 type UserUseCase struct {
@@ -60,6 +61,16 @@ func (uc *UserUseCase) CreateUser(user model.User) UserResponseApi {
 			Success: false,
 		}
 	}
+	// Hash the password
+	hashedPassword, err := utils.HashPassword(user.PasswordHash)
+	if err != nil {
+		return UserResponseApi{
+			Message: "Error hashing password" + err.Error(),
+			Data:    model.User{},
+			Success: false,
+		}
+	}
+	user.PasswordHash = hashedPassword
 
 	id, err := uc.repo.CreateUser(user)
 	if err != nil {
@@ -152,6 +163,90 @@ func (uc *UserUseCase) DeleteUser(id int) UserResponseApi {
 
 	return UserResponseApi{
 		Message: "Success deleting user",
+		Data:    user,
+		Success: true,
+	}
+}
+
+func (uc *UserUseCase) LoginUser(email string, password string) UserResponseApi {
+	user, err := uc.repo.GetUserByEmail(email)
+	if err != nil {
+		return UserResponseApi{
+			Message: "Error getting, user is not found" + err.Error(),
+			Data:    model.User{},
+			Success: false,
+		}
+	}
+
+	if !utils.CheckPasswordHash(password, user.PasswordHash) {
+		return UserResponseApi{
+			Message: "Error login, password is incorrect",
+			Data:    model.User{},
+			Success: false,
+		}
+	}
+
+	return UserResponseApi{
+		Message: "Success login",
+		Data:    user,
+		Success: true,
+	}
+}
+
+func (uc *UserUseCase) RequestUpdatedPassword(email string) UserResponseApi {
+	user, err := uc.repo.GetUserByEmail(email)
+	if err != nil {
+		return UserResponseApi{
+			Message: "Error getting, user is not found" + err.Error(),
+			Data:    model.User{},
+			Success: false,
+		}
+	}
+
+	// Aqui você pode adicionar uma verificação de ACL no futuro
+	// Enviar um email com um link para redefinir a senha
+	// O link deve conter um token com um tempo de expiração
+	// O token deve ser salvo no banco de dados
+
+	return UserResponseApi{
+		Message: "Success request updated password",
+		Data:    user,
+		Success: true,
+	}
+}
+
+func (uc *UserUseCase) UpdatePassword(id int, password string) UserResponseApi {
+	user, err := uc.repo.GetUserByID(id)
+	if err != nil {
+		return UserResponseApi{
+			Message: "Error getting, user is not found" + err.Error(),
+			Data:    model.User{},
+			Success: false,
+		}
+	}
+
+	// Hash the password
+	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		return UserResponseApi{
+			Message: "Error hashing password" + err.Error(),
+			Data:    model.User{},
+			Success: false,
+		}
+	}
+	user.PasswordHash = hashedPassword
+
+	_, err = uc.repo.UpdatedPassword(user)
+	if err != nil {
+		return UserResponseApi{
+			Message: "Error updating password" + err.Error(),
+			Data:    model.User{},
+			Success: false,
+		}
+	}
+
+	return UserResponseApi{
+		Message: "Success updating password",
 		Data:    user,
 		Success: true,
 	}

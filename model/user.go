@@ -13,3 +13,17 @@ type User struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 	GroupID      int       `json:"group_id"`
 }
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type RequestUpdatePassword struct {
+	Email string `json:"email"`
+}
+
+type UpdatePassword struct {
+	ID       int    `json:"id"`
+	Password string `json:"password"`
+}
