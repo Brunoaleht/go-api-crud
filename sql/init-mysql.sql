@@ -70,3 +70,20 @@ CREATE TABLE financial (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    car_id INT REFERENCES car(id),
+    total_amount DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE order_product (
+    id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES "order"(id),
+    product_id INT REFERENCES products(id),
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL
+);
