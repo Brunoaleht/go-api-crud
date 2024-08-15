@@ -106,8 +106,8 @@ func (pc *ProductController) UpdateProduct(ctx *gin.Context) {
 		})
 		return
 	}
-	var product model.Product
 
+	var product model.Product
 	product.ID = idNumber
 
 	err = ctx.BindJSON(&product)

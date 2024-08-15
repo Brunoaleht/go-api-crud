@@ -117,13 +117,17 @@ func (uc *UserUseCase) UpdateUser(user model.User) UserResponseApi {
 	}
 
 	// Verifique se o email foi alterado
-	if existingUser.Email != user.Email {
+	if existingUser.Email == user.Email {
 		// Aqui você pode adicionar uma verificação de ACL no futuro
 		return UserResponseApi{
 			Message: "Error updating user, email cannot be changed",
 			Data:    model.User{},
 			Success: false,
 		}
+	}
+
+	if user.GroupID == 0 {
+		user.GroupID = existingUser.GroupID
 	}
 
 	_, err = uc.repo.UpdateUser(user)

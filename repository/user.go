@@ -72,7 +72,15 @@ func (ur *UserRepository) GetUserByID(id int) (model.User, error) {
 }
 
 func (ur *UserRepository) UpdateUser(user model.User) (int, error) {
-	query := "UPDATE users SET name = COALESCE(NULLIF($1, ''), name), email = COALESCE(NULLIF($2, ''), email), phone = COALESCE(NULLIF($3, ''), phone), group_id =COALESCE(NULLIF($4, ''), group_id) WHERE id = $5"
+	query := `
+		UPDATE users 
+		SET 
+			name = COALESCE(NULLIF($1, ''), name), 
+			email = COALESCE(NULLIF($2, ''), email), 
+			phone = COALESCE(NULLIF($3, ''), phone), 
+			group_id = COALESCE(NULLIF($4::integer, NULL), group_id) 
+		WHERE id = $5`
+
 	result, err := ur.connection.Prepare(query)
 	if err != nil {
 		log.Println(err)

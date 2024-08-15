@@ -53,7 +53,7 @@ func (uc *UserController) CreateUser(ctx *gin.Context) {
 
 	response := uc.UserUseCase.CreateUser(user)
 	if !response.Success {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": response.Message,
 			"success": response.Success,
 		})

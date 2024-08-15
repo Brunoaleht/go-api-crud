@@ -72,8 +72,16 @@ func (pr *ProductRepository) GetProductByID(id int) (model.Product, error) {
 }
 
 func (pr *ProductRepository) UpdateProduct(product model.Product) (int, error) {
-	query := "UPDATE product SET name = COALESCE(NULLIF($1, ''), name), description = COALESCE(NULLIF($2, ''), description), price = COALESCE(NULLIF($3, ''), price), category_id =COALESCE(NULLIF($4, ''), category_id), stock_quantity = COALESCE(NULLIF($5, ''), stock_quantity) WHERE id = $6"
-	// query := "UPDATE product SET product_name = $1, price = $2 WHERE id = $3"
+	query := `
+		UPDATE product 
+		SET 
+			name = COALESCE(NULLIF($1, ''), name), 
+			description = COALESCE(NULLIF($2, ''), description), 
+			price = COALESCE(NULLIF($3::numeric, NULL), price), 
+			category_id = COALESCE(NULLIF($4::integer, NULL), category_id), 
+			stock_quantity = COALESCE(NULLIF($5::integer, NULL), stock_quantity) 
+		WHERE id = $6`
+
 	_, err := pr.connection.Exec(query, product.Name, product.Description, product.Price, product.CategoryID, product.StockQuantity, product.ID)
 	if err != nil {
 		log.Println(err)

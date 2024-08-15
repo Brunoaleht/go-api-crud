@@ -91,10 +91,31 @@ func (pu *ProductUseCase) GetProductByID(id int) ProductResponseApi {
 }
 
 func (pu *ProductUseCase) UpdateProduct(product model.Product) ProductResponseApi {
-	_, err := pu.repository.GetProductByID(product.ID)
+	productExist, err := pu.repository.GetProductByID(product.ID)
 	if err != nil {
 		return ProductResponseApi{
 			Message: "Error not found product" + err.Error(),
+			Data:    model.Product{},
+			Success: false,
+		}
+	}
+
+	if product.CategoryID == 0 {
+		product.CategoryID = productExist.CategoryID
+	}
+
+	if product.StockQuantity == 0 {
+		product.StockQuantity = productExist.StockQuantity
+	}
+
+	if product.Price == 0 {
+		product.Price = productExist.Price
+	}
+
+	_, err = pu.categoryRepo.GetCategoryByID(product.CategoryID)
+	if err != nil {
+		return ProductResponseApi{
+			Message: "Category does not exist",
 			Data:    model.Product{},
 			Success: false,
 		}
