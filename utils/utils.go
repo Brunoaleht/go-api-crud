@@ -16,3 +16,7 @@ func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
+
+func IntToBool(value int) bool {
+	return value != 0
+}

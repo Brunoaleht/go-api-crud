@@ -82,14 +82,16 @@ func (ar *AddressRepository) UpdateAddress(address model.Address) error {
 	return nil
 }
 
-func (ar *AddressRepository) DeleteAddress(id int) (int, error) {
-	query := "DELETE FROM addresses WHERE id = $1"
+func (ar *AddressRepository) DeleteAddress(id int, userID int) (int, error) {
+	query := "DELETE FROM addresses WHERE id = $1 AND user_id = $2"
 	result, err := ar.connection.Prepare(query)
 	if err != nil {
 		log.Println(err)
 		return 0, err
 	}
-	_, err = result.Exec(id)
+	defer result.Close() // Fechar o statement após a execução
+
+	_, err = result.Exec(id, userID)
 	if err != nil {
 		log.Println(err)
 		return 0, err
