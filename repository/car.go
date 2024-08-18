@@ -71,26 +71,52 @@ func (cr *CarRepository) GetCarByID(id int) (model.Car, error) {
 	return carObj, nil
 }
 
-func (cr *CarRepository) GetCarProductsByCarID(carID int) ([]model.CarProduct, error) {
-	query := "SELECT id, car_id, product_id, quantity, unit_price FROM car_products WHERE car_id = $1"
-	rows, err := cr.connection.Query(query, carID)
+func (cr *CarRepository) GetCarByUserID(userID int) (model.Car, error) {
+	query := "SELECT id, user_id, status, created_at, updated_at FROM cars WHERE user_id = $1"
+	row := cr.connection.QueryRow(query, userID)
+
+	var carObj model.Car
+	err := row.Scan(&carObj.ID, &carObj.UserID, &carObj.Status, &carObj.CreatedAt, &carObj.UpdatedAt)
 	if err != nil {
-		log.Printf("Error querying car product: %v", err)
-		return []model.CarProduct{}, err
-	}
-	defer rows.Close()
-
-	var carProductList []model.CarProduct
-	var carProductObj model.CarProduct
-
-	for rows.Next() {
-		err := rows.Scan(&carProductObj.ID, &carProductObj.CarID, &carProductObj.ProductID, &carProductObj.Quantity, &carProductObj.UnitPrice)
-		if err != nil {
-			log.Printf("Error scanning car product: %v", err)
-			return []model.CarProduct{}, err
-		}
-		carProductList = append(carProductList, carProductObj)
+		log.Printf("Error scanning car: %v", err)
+		return model.Car{}, err
 	}
 
-	return carProductList, nil
+	return carObj, nil
+}
+
+func (cr *CarRepository) UpdateCarStatus(carID int, status string) (int, error) {
+	query := "UPDATE cars SET status = $1 WHERE id = $2"
+	result, err := cr.connection.Prepare(query)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	defer result.Close()
+
+	_, err = result.Exec(status, carID)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+
+	return carID, nil
+}
+
+func (cr *CarRepository) DeleteCar(id int) (int, error) {
+	query := "DELETE FROM cars WHERE id = $1"
+	result, err := cr.connection.Prepare(query)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	defer result.Close()
+
+	_, err = result.Exec(id)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+
+	return id, nil
 }
