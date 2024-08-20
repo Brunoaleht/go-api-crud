@@ -95,6 +95,20 @@ func (cr *CarRepository) GetCarsByUserID(userID int) ([]model.Car, error) {
 	return carList, nil
 }
 
+func (cr *CarRepository) GetCarActiveByUserID(userID int) (model.Car, error) {
+	query := "SELECT id, user_id, status, created_at, updated_at FROM cars WHERE user_id = $1 AND status = 'active'"
+	row := cr.connection.QueryRow(query, userID)
+
+	var carObj model.Car
+	err := row.Scan(&carObj.ID, &carObj.UserID, &carObj.Status, &carObj.CreatedAt, &carObj.UpdatedAt)
+	if err != nil {
+		log.Println(err)
+		return model.Car{}, err
+	}
+
+	return carObj, nil
+}
+
 func (cr *CarRepository) UpdateCarStatus(carID int, status string) (int, error) {
 	query := "UPDATE cars SET status = $1 WHERE id = $2"
 	result, err := cr.connection.Prepare(query)
