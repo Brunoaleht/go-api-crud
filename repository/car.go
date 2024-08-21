@@ -169,7 +169,7 @@ func (cr *CarRepository) BeginTransaction() (*Transaction, error) {
 
 func (cr *CarRepository) GetCarActiveByUserIDWithTransaction(userID int, tx *Transaction) (model.Car, error) {
 	var car model.Car
-	err := tx.tx.QueryRow("SELECT id, user_id, status FROM cars WHERE user_id = ? AND status = ?", userID, model.CarStatusActive).Scan(&car.ID, &car.UserID, &car.Status)
+	err := tx.tx.QueryRow("SELECT id, user_id, status FROM cars WHERE user_id = $1 AND status = $2", userID, model.CarStatusActive).Scan(&car.ID, &car.UserID, &car.Status)
 	if err != nil {
 		log.Println(err)
 		return car, err
@@ -178,7 +178,7 @@ func (cr *CarRepository) GetCarActiveByUserIDWithTransaction(userID int, tx *Tra
 }
 
 func (cr *CarRepository) CreateCarWithTransaction(car model.Car, tx *Transaction) (int, error) {
-	result, err := tx.tx.Exec("INSERT INTO cars (user_id, status) VALUES (?, ?)", car.UserID, car.Status)
+	result, err := tx.tx.Exec("INSERT INTO cars (user_id, status) VALUES ($1, $2)", car.UserID, car.Status)
 	if err != nil {
 		log.Println(err)
 		return 0, err

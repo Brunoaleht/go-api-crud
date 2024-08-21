@@ -132,7 +132,7 @@ func (cpr *CarProductRepository) GetCarProductsByCarID(carID int) ([]model.CarPr
 func (cpr *CarProductRepository) GetCarProductsByCarIDWithTransaction(carID int, tx *Transaction) ([]model.CarProduct, error) {
 	var carProducts []model.CarProduct
 
-	rows, err := tx.tx.Query("SELECT id, car_id, product_id, quantity FROM car_products WHERE car_id = ?", carID)
+	rows, err := tx.tx.Query("SELECT id, car_id, product_id, quantity FROM car_products WHERE car_id = $1", carID)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (cpr *CarProductRepository) GetCarProductsByCarIDWithTransaction(carID int,
 }
 
 func (cpr *CarProductRepository) CreateCarProductWithTransaction(carProduct model.CarProduct, tx *Transaction) (int, error) {
-	result, err := tx.tx.Exec("INSERT INTO car_products (car_id, product_id, quantity) VALUES (?, ?, ?)", carProduct.CarID, carProduct.ProductID, carProduct.Quantity)
+	result, err := tx.tx.Exec("INSERT INTO car_products (car_id, product_id, quantity) VALUES ($1, $2, $3)", carProduct.CarID, carProduct.ProductID, carProduct.Quantity)
 	if err != nil {
 		log.Println(err)
 		return 0, err
