@@ -1,0 +1,234 @@
+-----------------------Controller-----------------------------------------
+
+// func (cc *CarController) AddProductToCar(ctx *gin.Context) {
+// userID, err := strconv.Atoi(ctx.Param("userId"))
+// if err != nil {
+// ctx.JSON(http.StatusBadRequest, gin.H{
+// "message": "Invalid user ID",
+// "success": false,
+// })
+// return
+// }
+
+// var carProduct model.CarProduct
+// err = ctx.BindJSON(&carProduct)
+// if err != nil {
+// ctx.JSON(http.StatusBadRequest, gin.H{
+// "message": "Invalid car product data",
+// "success": false,
+// })
+// return
+// }
+
+// // Verifica se o produto existe e se tem estoque
+// responseProduct := cc.pu.GetProductByID(carProduct.ProductID)
+// if !responseProduct.Success {
+// ctx.JSON(http.StatusBadRequest, gin.H{
+// "message": responseProduct.Message,
+// "success": responseProduct.Success,
+// })
+// return
+// }
+
+// product := responseProduct.Data
+// if product.StockQuantity == 0 {
+// ctx.JSON(http.StatusBadRequest, gin.H{
+// "message": "Product out of stock",
+// "success": false,
+// })
+// return
+// }
+
+// carProduct.UnitPrice = product.Price
+
+// // Atualiza a quantidade de estoque
+// product.StockQuantity -= carProduct.Quantity
+// responseUpdateProduct := cc.pu.UpdateProduct(product)
+// if !responseUpdateProduct.Success {
+// ctx.JSON(http.StatusInternalServerError, gin.H{
+// "message": responseUpdateProduct.Message,
+// "success": responseUpdateProduct.Success,
+// })
+// return
+// }
+
+// // Adiciona o produto ao carrinho, cria o carrinho se necessário
+// response := cc.cu.AddProductToCar(userID, carProduct)
+// if !response.Success {
+// ctx.JSON(http.StatusInternalServerError, gin.H{
+// "message": response.Message,
+// "success": response.Success,
+// })
+// return
+// }
+
+// ctx.JSON(http.StatusOK, gin.H{
+// "message": response.Message,
+// "success": response.Success,
+// "car": response.Data,
+// })
+// }
+
+---
+
+-------------------UseCase-----------------------------
+// func (uc \*CarUseCase) AddProductToCar(userID, carID int, carProduct model.CarProduct) IResponseCarWithProducts {
+
+// // Verifica se o carro existe
+// carFound, err := uc.cr.GetCarByID(carID)
+// if err != nil || carFound.ID == 0 {
+// // Se o carrinho não for encontrado ou o ID do carrinho for zero, crie um novo carrinho
+// newCar := model.Car{
+// UserID: userID,
+// Status: model.CarStatusInactive, // Ou o status que você deseja
+// }
+
+// carID, err := uc.cr.CreateCar(newCar)
+// if err != nil {
+// return IResponseCarWithProducts{
+// Message: "Error creating new car: " + err.Error(),
+// Data: model.CarWithProducts{
+// ID: 0,
+// UserID: userID,
+// Status: "",
+// Products: []model.CarProduct{},
+// },
+// Success: false,
+// }
+// }
+
+// // Atualiza o ID do carro do carProduct com o novo carro criado
+// carProduct.CarID = carID
+
+// // Busca o novo carro criado
+// carFound, err = uc.cr.GetCarByID(carID)
+// if err != nil {
+// return IResponseCarWithProducts{
+// Message: "Error retrieving new car: " + err.Error(),
+// Data: model.CarWithProducts{
+// ID: 0,
+// UserID: userID,
+// Status: "",
+// Products: []model.CarProduct{},
+// },
+// Success: false,
+// }
+// }
+// }
+
+// id, err := uc.cpr.CreateCarProduct(carProduct)
+// if err != nil {
+// return IResponseCarWithProducts{
+// Message: "Error adding product to car" + err.Error(),
+// Data: model.CarWithProducts{
+// ID: carFound.ID,
+// UserID: carFound.UserID,
+// Status: carFound.Status,
+// Products: []model.CarProduct{},
+// },
+// Success: false,
+// }
+// }
+
+// carProduct.ID = id
+
+// listCarProduct, err := uc.cpr.GetCarProductsByCarID(carProduct.CarID)
+// if err != nil {
+// return IResponseCarWithProducts{
+// Message: "Error getting product in car" + err.Error(),
+// Data: model.CarWithProducts{
+// ID: carFound.ID,
+// UserID: carFound.UserID,
+// Status: carFound.Status,
+// Products: []model.CarProduct{},
+// },
+// Success: false,
+// }
+// }
+
+// return IResponseCarWithProducts{
+// Message: "Success adding product to car",
+// Data: model.CarWithProducts{
+// ID: carFound.ID,
+// UserID: carFound.UserID,
+// Status: carFound.Status,
+// Products: listCarProduct,
+// },
+// Success: true,
+// }
+// }
+
+// func (uc \*CarUseCase) AddProductToCar(userID int, carProduct model.CarProduct) IResponseCarWithProducts {
+// // Verifica se o usuário já tem um carrinho ativo
+// carFound, err := uc.cr.GetCarActiveByUserID(userID)
+// if err != nil || carFound.ID == 0 {
+// // Se o carrinho não for encontrado, crie um novo
+// newCar := model.Car{
+// UserID: userID,
+// Status: model.CarStatusActive, // Define o status como ativo
+// }
+
+// carID, err := uc.cr.CreateCar(newCar)
+// if err != nil {
+// return IResponseCarWithProducts{
+// Message: "Error creating new car: " + err.Error(),
+// Data: model.CarWithProducts{
+// ID: 0,
+// UserID: userID,
+// Status: "",
+// Products: []model.CarProduct{},
+// },
+// Success: false,
+// }
+// }
+
+// carProduct.CarID = carID
+// carFound = newCar
+// carFound.ID = carID
+// } else {
+// carProduct.CarID = carFound.ID
+// }
+
+// id, err := uc.cpr.CreateCarProduct(carProduct)
+// if err != nil {
+// return IResponseCarWithProducts{
+// Message: "Error adding product to car: " + err.Error(),
+// Data: model.CarWithProducts{
+// ID: carFound.ID,
+// UserID: carFound.UserID,
+// Status: carFound.Status,
+// Products: []model.CarProduct{},
+// },
+// Success: false,
+// }
+// }
+
+// carProduct.ID = id
+
+// listCarProduct, err := uc.cpr.GetCarProductsByCarID(carProduct.CarID)
+// if err != nil {
+// return IResponseCarWithProducts{
+// Message: "Error getting products in car: " + err.Error(),
+// Data: model.CarWithProducts{
+// ID: carFound.ID,
+// UserID: carFound.UserID,
+// Status: carFound.Status,
+// Products: []model.CarProduct{},
+// },
+// Success: false,
+// }
+// }
+
+// return IResponseCarWithProducts{
+// Message: "Success adding product to car",
+// Data: model.CarWithProducts{
+// ID: carFound.ID,
+// UserID: carFound.UserID,
+// Status: carFound.Status,
+// Products: listCarProduct,
+// },
+// Success: true,
+// }
+// }
+
+---

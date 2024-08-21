@@ -128,3 +128,41 @@ func (cpr *CarProductRepository) GetCarProductsByCarID(carID int) ([]model.CarPr
 
 	return carProductList, nil
 }
+
+func (cpr *CarProductRepository) GetCarProductsByCarIDWithTransaction(carID int, tx *Transaction) ([]model.CarProduct, error) {
+	var carProducts []model.CarProduct
+
+	rows, err := tx.tx.Query("SELECT id, car_id, product_id, quantity FROM car_products WHERE car_id = ?", carID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var carProduct model.CarProduct
+		if err := rows.Scan(&carProduct.ID, &carProduct.CarID, &carProduct.ProductID, &carProduct.Quantity); err != nil {
+			return nil, err
+		}
+		carProducts = append(carProducts, carProduct)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return carProducts, nil
+}
+
+func (cpr *CarProductRepository) CreateCarProductWithTransaction(carProduct model.CarProduct, tx *Transaction) (int, error) {
+	result, err := tx.tx.Exec("INSERT INTO car_products (car_id, product_id, quantity) VALUES (?, ?, ?)", carProduct.CarID, carProduct.ProductID, carProduct.Quantity)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	return int(id), nil
+}

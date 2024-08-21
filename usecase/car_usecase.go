@@ -211,103 +211,31 @@ func (uc *CarUseCase) CreateCarWithProducts(car model.Car, carProducts []model.C
 	}
 }
 
-// func (uc *CarUseCase) AddProductToCar(userID, carID int, carProduct model.CarProduct) IResponseCarWithProducts {
-
-// 	// Verifica se o carro existe
-// 	carFound, err := uc.cr.GetCarByID(carID)
-// 	if err != nil || carFound.ID == 0 {
-// 		// Se o carrinho não for encontrado ou o ID do carrinho for zero, crie um novo carrinho
-// 		newCar := model.Car{
-// 			UserID: userID,
-// 			Status: model.CarStatusInactive, // Ou o status que você deseja
-// 		}
-
-// 		carID, err := uc.cr.CreateCar(newCar)
-// 		if err != nil {
-// 			return IResponseCarWithProducts{
-// 				Message: "Error creating new car: " + err.Error(),
-// 				Data: model.CarWithProducts{
-// 					ID:       0,
-// 					UserID:   userID,
-// 					Status:   "",
-// 					Products: []model.CarProduct{},
-// 				},
-// 				Success: false,
-// 			}
-// 		}
-
-// 		// Atualiza o ID do carro do carProduct com o novo carro criado
-// 		carProduct.CarID = carID
-
-// 		// Busca o novo carro criado
-// 		carFound, err = uc.cr.GetCarByID(carID)
-// 		if err != nil {
-// 			return IResponseCarWithProducts{
-// 				Message: "Error retrieving new car: " + err.Error(),
-// 				Data: model.CarWithProducts{
-// 					ID:       0,
-// 					UserID:   userID,
-// 					Status:   "",
-// 					Products: []model.CarProduct{},
-// 				},
-// 				Success: false,
-// 			}
-// 		}
-// 	}
-
-// 	id, err := uc.cpr.CreateCarProduct(carProduct)
-// 	if err != nil {
-// 		return IResponseCarWithProducts{
-// 			Message: "Error adding product to car" + err.Error(),
-// 			Data: model.CarWithProducts{
-// 				ID:       carFound.ID,
-// 				UserID:   carFound.UserID,
-// 				Status:   carFound.Status,
-// 				Products: []model.CarProduct{},
-// 			},
-// 			Success: false,
-// 		}
-// 	}
-
-// 	carProduct.ID = id
-
-// 	listCarProduct, err := uc.cpr.GetCarProductsByCarID(carProduct.CarID)
-// 	if err != nil {
-// 		return IResponseCarWithProducts{
-// 			Message: "Error getting product in car" + err.Error(),
-// 			Data: model.CarWithProducts{
-// 				ID:       carFound.ID,
-// 				UserID:   carFound.UserID,
-// 				Status:   carFound.Status,
-// 				Products: []model.CarProduct{},
-// 			},
-// 			Success: false,
-// 		}
-// 	}
-
-// 	return IResponseCarWithProducts{
-// 		Message: "Success adding product to car",
-// 		Data: model.CarWithProducts{
-// 			ID:       carFound.ID,
-// 			UserID:   carFound.UserID,
-// 			Status:   carFound.Status,
-// 			Products: listCarProduct,
-// 		},
-// 		Success: true,
-// 	}
-// }
-
 func (uc *CarUseCase) AddProductToCar(userID int, carProduct model.CarProduct) IResponseCarWithProducts {
-	// Verifica se o usuário já tem um carrinho ativo
-	carFound, err := uc.cr.GetCarActiveByUserID(userID)
+	tx, err := uc.cr.BeginTransaction()
+	if err != nil {
+		return IResponseCarWithProducts{
+			Message: "Error starting transaction: " + err.Error(),
+			Success: false,
+		}
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	carFound, err := uc.cr.GetCarActiveByUserIDWithTransaction(userID, tx)
 	if err != nil || carFound.ID == 0 {
-		// Se o carrinho não for encontrado, crie um novo
 		newCar := model.Car{
 			UserID: userID,
-			Status: model.CarStatusActive, // Define o status como ativo
+			Status: model.CarStatusActive,
 		}
 
-		carID, err := uc.cr.CreateCar(newCar)
+		carID, err := uc.cr.CreateCarWithTransaction(newCar, tx)
 		if err != nil {
 			return IResponseCarWithProducts{
 				Message: "Error creating new car: " + err.Error(),
@@ -328,7 +256,7 @@ func (uc *CarUseCase) AddProductToCar(userID int, carProduct model.CarProduct) I
 		carProduct.CarID = carFound.ID
 	}
 
-	id, err := uc.cpr.CreateCarProduct(carProduct)
+	id, err := uc.cpr.CreateCarProductWithTransaction(carProduct, tx)
 	if err != nil {
 		return IResponseCarWithProducts{
 			Message: "Error adding product to car: " + err.Error(),
@@ -344,7 +272,7 @@ func (uc *CarUseCase) AddProductToCar(userID int, carProduct model.CarProduct) I
 
 	carProduct.ID = id
 
-	listCarProduct, err := uc.cpr.GetCarProductsByCarID(carProduct.CarID)
+	listCarProduct, err := uc.cpr.GetCarProductsByCarIDWithTransaction(carProduct.CarID, tx)
 	if err != nil {
 		return IResponseCarWithProducts{
 			Message: "Error getting products in car: " + err.Error(),

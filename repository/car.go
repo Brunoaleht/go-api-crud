@@ -144,3 +144,49 @@ func (cr *CarRepository) DeleteCar(id int) (int, error) {
 
 	return id, nil
 }
+
+// Transaction
+type Transaction struct {
+	tx *sql.Tx
+}
+
+func (t *Transaction) Commit() error {
+	return t.tx.Commit()
+}
+
+func (t *Transaction) Rollback() error {
+	return t.tx.Rollback()
+}
+
+func (cr *CarRepository) BeginTransaction() (*Transaction, error) {
+	tx, err := cr.connection.Begin()
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &Transaction{tx: tx}, nil
+}
+
+func (cr *CarRepository) GetCarActiveByUserIDWithTransaction(userID int, tx *Transaction) (model.Car, error) {
+	var car model.Car
+	err := tx.tx.QueryRow("SELECT id, user_id, status FROM cars WHERE user_id = ? AND status = ?", userID, model.CarStatusActive).Scan(&car.ID, &car.UserID, &car.Status)
+	if err != nil {
+		log.Println(err)
+		return car, err
+	}
+	return car, nil
+}
+
+func (cr *CarRepository) CreateCarWithTransaction(car model.Car, tx *Transaction) (int, error) {
+	result, err := tx.tx.Exec("INSERT INTO cars (user_id, status) VALUES (?, ?)", car.UserID, car.Status)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	return int(id), nil
+}

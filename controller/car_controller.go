@@ -11,13 +11,11 @@ import (
 
 type CarController struct {
 	cu usecase.CarUseCase
-	pu usecase.ProductUseCase
 }
 
-func NewCarController(cu usecase.CarUseCase, pu usecase.ProductUseCase) *CarController {
+func NewCarController(cu usecase.CarUseCase) *CarController {
 	return &CarController{
 		cu: cu,
-		pu: pu,
 	}
 }
 
@@ -122,7 +120,7 @@ func (cc *CarController) AddProductToCar(ctx *gin.Context) {
 	userID, err := strconv.Atoi(ctx.Param("userId"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid user ID",
+			"message": "ID do usuário inválido",
 			"success": false,
 		})
 		return
@@ -132,45 +130,13 @@ func (cc *CarController) AddProductToCar(ctx *gin.Context) {
 	err = ctx.BindJSON(&carProduct)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid car product data",
+			"message": "Dados do produto no carro inválidos",
 			"success": false,
 		})
 		return
 	}
 
-	// Verifica se o produto existe e se tem estoque
-	responseProduct := cc.pu.GetProductByID(carProduct.ProductID)
-	if !responseProduct.Success {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": responseProduct.Message,
-			"success": responseProduct.Success,
-		})
-		return
-	}
-
-	product := responseProduct.Data
-	if product.StockQuantity == 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Product out of stock",
-			"success": false,
-		})
-		return
-	}
-
-	carProduct.UnitPrice = product.Price
-
-	// Atualiza a quantidade de estoque
-	product.StockQuantity -= carProduct.Quantity
-	responseUpdateProduct := cc.pu.UpdateProduct(product)
-	if !responseUpdateProduct.Success {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": responseUpdateProduct.Message,
-			"success": responseUpdateProduct.Success,
-		})
-		return
-	}
-
-	// Adiciona o produto ao carrinho, cria o carrinho se necessário
+	// Verificar a existência do produto e estoque na camada de use case
 	response := cc.cu.AddProductToCar(userID, carProduct)
 	if !response.Success {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
