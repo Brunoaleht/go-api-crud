@@ -40,7 +40,7 @@ CREATE TABLE addresses (
     city VARCHAR(100) NOT NULL,
     state VARCHAR(100) NOT NULL,
     country VARCHAR(100) NOT NULL,
-    postal_code VARCHAR(20) NOT NULL,
+    zip_code VARCHAR(20) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -48,7 +48,7 @@ CREATE TABLE addresses (
 CREATE TABLE car (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    status VARCHAR(50) NOT NULL,
+    status VARCHAR(50) NOT NULL CHECK (status IN ('active', 'inactive')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
